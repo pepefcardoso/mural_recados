@@ -165,4 +165,172 @@ class RecadoTest extends TestCase
         $resultStatus = $this->recado->toggleFavorite();
         $this->assertEquals($novoStatusEsperado, $resultStatus);
     }
+
+    public function testReadSingleRetornaRecadoCorreto(): void
+    {
+        $this->recado->id = 1;
+
+        $expectedSql = 'SELECT id, mensagem, status, data_criacao FROM recados WHERE id = :id LIMIT 1';
+
+        $this->dbMock->expects($this->once())
+            ->method('prepare')
+            ->with($expectedSql)
+            ->willReturn($this->stmtMock);
+
+        $this->stmtMock->expects($this->once())
+            ->method('bindParam')
+            ->with(':id', $this->equalTo(1));
+
+        $this->stmtMock->expects($this->once())
+            ->method('execute');
+
+        $this->stmtMock->expects($this->once())
+            ->method('fetch')
+            ->willReturn([
+                'id' => 1,
+                'mensagem' => 'Teste',
+                'status' => 0,
+                'data_criacao' => '2025-11-14 20:00:00'
+            ]);
+
+        $result = $this->recado->read_single();
+
+        $this->assertIsArray($result);
+        $this->assertEquals(1, $result['id']);
+    }
+
+    public function testToggleFavoriteDeUmParaZero(): void
+    {
+        $this->recado->id = 2;
+        $statusAtual = 1;
+        $novoStatusEsperado = 0;
+
+        $stmtReadMock = $this->createMock(PDOStatement::class);
+        $stmtUpdateMock = $this->createMock(PDOStatement::class);
+
+        $this->dbMock->method('prepare')
+            ->willReturnMap([
+                ['SELECT status FROM recados WHERE id = :id', [], $stmtReadMock],
+                ['UPDATE recados SET status = :status WHERE id = :id', [], $stmtUpdateMock]
+            ]);
+
+        $stmtReadMock->expects($this->once())
+            ->method('fetch')
+            ->willReturn(['status' => $statusAtual]);
+
+        $stmtUpdateMock->expects($this->once())
+            ->method('execute')
+            ->willReturn(true);
+
+        $resultStatus = $this->recado->toggleFavorite();
+        $this->assertEquals($novoStatusEsperado, $resultStatus);
+    }
+
+    public function testToggleFavoriteRecadoInexistenteRetornaNull(): void
+    {
+        $this->recado->id = 999;
+
+        $stmtReadMock = $this->createMock(PDOStatement::class);
+
+        $this->dbMock->expects($this->once())
+            ->method('prepare')
+            ->willReturn($stmtReadMock);
+
+        $stmtReadMock->expects($this->once())
+            ->method('fetch')
+            ->willReturn(false);
+
+        $result = $this->recado->toggleFavorite();
+        $this->assertNull($result);
+    }
+
+    public function testReadRetornaArray(): void
+    {
+        $this->dbMock->expects($this->once())
+            ->method('prepare')
+            ->willReturn($this->stmtMock);
+
+        $this->stmtMock->expects($this->once())
+            ->method('execute');
+
+        $this->stmtMock->expects($this->once())
+            ->method('fetchAll')
+            ->willReturn([]);
+
+        $result = $this->recado->read();
+        $this->assertIsArray($result);
+    }
+
+    public function testCreateComCaracteresEspeciais(): void
+    {
+        $mensagemComHTML = '<b>Teste</b> & "quotes" \'single\'';
+        $this->recado->mensagem = $mensagemComHTML;
+
+        $expectedSql = 'INSERT INTO recados (mensagem) VALUES (:mensagem)';
+
+        $this->dbMock->expects($this->once())
+            ->method('prepare')
+            ->with($expectedSql)
+            ->willReturn($this->stmtMock);
+
+        $this->stmtMock->expects($this->once())
+            ->method('bindParam')
+            ->with(':mensagem', $this->identicalTo($mensagemComHTML));
+
+        $this->stmtMock->expects($this->once())
+            ->method('execute')
+            ->willReturn(true);
+
+        $result = $this->recado->create();
+        $this->assertTrue($result);
+    }
+
+    public function testCreateComErroRetornaFalse(): void
+    {
+        $this->recado->mensagem = 'Teste';
+
+        $this->dbMock->expects($this->once())
+            ->method('prepare')
+            ->willReturn($this->stmtMock);
+
+        $this->stmtMock->expects($this->once())
+            ->method('execute')
+            ->will($this->throwException(new PDOException('Erro simulado')));
+
+        $result = $this->recado->create();
+        $this->assertFalse($result);
+    }
+
+    public function testUpdateComErroRetornaFalse(): void
+    {
+        $this->recado->id = 1;
+        $this->recado->mensagem = 'Teste';
+
+        $this->dbMock->expects($this->once())
+            ->method('prepare')
+            ->willReturn($this->stmtMock);
+
+        $this->stmtMock->expects($this->once())
+            ->method('execute')
+            ->will($this->throwException(new PDOException('Erro simulado')));
+
+        $result = $this->recado->update();
+        $this->assertFalse($result);
+    }
+
+    public function testDeleteComErroRetornaFalse(): void
+    {
+        $this->recado->id = 1;
+
+        $this->dbMock->expects($this->once())
+            ->method('prepare')
+            ->willReturn($this->stmtMock);
+
+        $this->stmtMock->expects($this->once())
+            ->method('execute')
+            ->will($this->throwException(new PDOException('Erro simulado')));
+
+        $result = $this->recado->delete();
+        $this->assertFalse($result);
+    }
 }
