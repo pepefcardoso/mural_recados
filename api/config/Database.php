@@ -11,11 +11,19 @@ try {
 
 class Database
 {
-    private $host = $_ENV['DB_HOST'];
-    private $db_name = $_ENV['DB_DATABASE'];
-    private $username = $_ENV['DB_USERNAME'];
-    private $password = $_ENV['DB_PASSWORD'];
+    private $host;
+    private $db_name;
+    private $username;
+    private $password;
     private $conn;
+
+    public function __construct()
+    {
+        $this->host = $_ENV['DB_HOST'];
+        $this->db_name = $_ENV['DB_DATABASE'];
+        $this->username = $_ENV['DB_USERNAME'];
+        $this->password = $_ENV['DB_PASSWORD'];
+    }
 
     public function connect()
     {

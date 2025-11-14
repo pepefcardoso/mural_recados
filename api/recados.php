@@ -40,9 +40,9 @@ try {
         case 'POST':
             $data = json_decode(file_get_contents("php://input"));
 
-            if (empty($data->mensagem)) {
+            if (empty($data->mensagem) || strlen(trim($data->mensagem)) < 3) {
                 http_response_code(400);
-                echo json_encode(['mensagem' => 'Mensagem não pode estar vazia.']);
+                echo json_encode(['mensagem' => 'Mensagem deve ter no mínimo 3 caracteres.']);
                 break;
             }
 
