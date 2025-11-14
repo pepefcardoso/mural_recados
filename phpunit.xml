@@ -1,0 +1,19 @@
+<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:noNamespaceSchemaLocation="vendor/phpunit/phpunit/phpunit.xsd"
+         bootstrap="vendor/autoload.php"
+         colors="true">
+    <testsuites>
+        <testsuite name="Mural de Recados Test Suite">
+            <directory>tests</directory>
+        </testsuite>
+    </testsuites>
+    <source>
+        <include>
+            <directory>api</directory>
+        </include>
+        <exclude>
+            <directory>api/config</directory>
+            <file>api/recados.php</file>
+        </exclude>
+    </source>
+</phpunit>

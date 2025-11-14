@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Mural de Recados</title>
+    <link rel="stylesheet" href="style.css" />
+    <script src="script.js" defer></script>
+  </head>
+  <body>
+    <header class="header">
+      <h1>Mural de Recados</h1>
+    </header>
+
+    <main class="container">
+      <section id="form-container" class="form-container">
+        <h2 id="form-title">Adicionar Novo Recado</h2>
+        <form id="recado-form">
+          <input type="hidden" id="recado-id" />
+
+          <div class="form-group">
+            <label for="recado-mensagem">Mensagem:</label>
+            <textarea
+              id="recado-mensagem"
+              rows="4"
+              placeholder="Escreva seu recado aqui..."
+              required
+            ></textarea>
+          </div>
+
+          <div class="form-actions">
+            <button type="submit" id="btn-salvar" class="btn btn-primary">
+              Salvar
+            </button>
+            <button
+              type="button"
+              id="btn-cancelar"
+              class="btn btn-secondary hidden"
+            >
+              Cancelar Edição
+            </button>
+          </div>
+        </form>
+      </section>
+
+      <section id="recados-container" class="recados-container">
+        <h2>Recados Salvos</h2>
+
+        <div id="loading-indicator" class="loading-indicator hidden">
+          <div class="spinner"></div>
+          Carregando recados...
+        </div>
+
+        <div id="recados-lista"></div>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <p>&copy; 2025. Todos os direitos reservados.</p>
+    </footer>
+  </body>
+</html>
