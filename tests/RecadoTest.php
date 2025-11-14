@@ -1,7 +1,6 @@
 <?php
 
 use PHPUnit\Framework\TestCase;
-// REMOVIDO: 'use PHPUnit\Framework\Constraint\ConsecutiveParameters;'
 
 include_once __DIR__ . '/../api/models/Recado.php';
 
@@ -20,7 +19,6 @@ class RecadoTest extends TestCase
 
     public function testReadOrdenaPorStatusCorretamente(): void
     {
-        // ... (Este teste já estava a passar e continua igual)
         $expectedSql = 'SELECT id, mensagem, status, data_criacao FROM recados ORDER BY status DESC, data_criacao DESC';
 
         $this->dbMock->expects($this->once())
@@ -37,7 +35,6 @@ class RecadoTest extends TestCase
 
     public function testCreateUsaBindParamParaSeguranca(): void
     {
-        // ... (Este teste já estava a passar e continua igual)
         $mensagemComSimbolos = '<script>alert(1)</script> & Símbolos';
         $this->recado->mensagem = $mensagemComSimbolos;
 
@@ -72,14 +69,22 @@ class RecadoTest extends TestCase
             ->with($expectedSql)
             ->willReturn($this->stmtMock);
 
-        // *** CORRIGIDO AQUI ***
-        // Trocado 'new ConsecutiveParameters(...)' por 'self::withConsecutive(...)'
+        $callCount = 0;
         $this->stmtMock->expects($this->exactly(2))
             ->method('bindParam')
-            ->with(self::withConsecutive(
-                [$this->equalTo(':mensagem'), $this->equalTo('Mensagem atualizada')],
-                [$this->equalTo(':id'), $this->equalTo(10)]
-            ));
+            ->willReturnCallback(function ($param, &$value) use (&$callCount) {
+                $callCount++;
+
+                if ($callCount === 1) {
+                    $this->assertEquals(':mensagem', $param);
+                    $this->assertEquals('Mensagem atualizada', $value);
+                } elseif ($callCount === 2) {
+                    $this->assertEquals(':id', $param);
+                    $this->assertEquals(10, $value);
+                }
+
+                return true;
+            });
 
         $this->stmtMock->expects($this->once())
             ->method('execute')
@@ -90,7 +95,6 @@ class RecadoTest extends TestCase
 
     public function testDelete(): void
     {
-        // ... (Este teste já estava a passar e continua igual)
         $this->recado->id = 5;
 
         $expectedSql = 'DELETE FROM recados WHERE id = :id';
@@ -122,8 +126,8 @@ class RecadoTest extends TestCase
 
         $this->dbMock->method('prepare')
             ->willReturnMap([
-                ['SELECT status FROM recados WHERE id = :id', $stmtReadMock],
-                ['UPDATE recados SET status = :status WHERE id = :id', $stmtUpdateMock]
+                ['SELECT status FROM recados WHERE id = :id', [], $stmtReadMock],
+                ['UPDATE recados SET status = :status WHERE id = :id', [], $stmtUpdateMock]
             ]);
 
         $stmtReadMock->expects($this->once())
@@ -132,19 +136,28 @@ class RecadoTest extends TestCase
 
         $stmtReadMock->expects($this->once())
             ->method('execute');
+
         $stmtReadMock->expects($this->once())
             ->method('fetch')
             ->willReturn(['status' => $statusAtual]);
 
-        // *** CORRIGIDO AQUI ***
-        // Trocado 'new ConsecutiveParameters(...)' por 'self::withConsecutive(...)'
+        $callCount = 0;
         $stmtUpdateMock->expects($this->exactly(2))
             ->method('bindParam')
-            ->with(self::withConsecutive(
-                [$this->equalTo(':status'), $this->equalTo($novoStatusEsperado)],
-                [$this->equalTo(':id'), $this->equalTo(1)]
-            ));
-        
+            ->willReturnCallback(function ($param, &$value) use (&$callCount, $novoStatusEsperado) {
+                $callCount++;
+
+                if ($callCount === 1) {
+                    $this->assertEquals(':status', $param);
+                    $this->assertEquals($novoStatusEsperado, $value);
+                } elseif ($callCount === 2) {
+                    $this->assertEquals(':id', $param);
+                    $this->assertEquals(1, $value);
+                }
+
+                return true;
+            });
+
         $stmtUpdateMock->expects($this->once())
             ->method('execute')
             ->willReturn(true);
@@ -153,4 +166,3 @@ class RecadoTest extends TestCase
         $this->assertEquals($novoStatusEsperado, $resultStatus);
     }
 }
-?>

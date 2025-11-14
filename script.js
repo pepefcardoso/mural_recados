@@ -39,6 +39,11 @@ document.addEventListener("DOMContentLoaded", () => {
     } catch (error) {
       console.error("Falha ao buscar recados:", error);
       showError("Não foi possível carregar os recados.");
+      recadosLista.innerHTML = `
+        <div style="color: red; text-align: center; padding: 2rem;">
+          ❌ Não foi possível carregar os recados. Verifique sua conexão.
+        </div>
+      `;
     } finally {
       setAppLoading(false);
     }
@@ -139,8 +144,8 @@ document.addEventListener("DOMContentLoaded", () => {
     const mensagem = recadoMensagemInput.value.trim();
     const id = recadoIdInput.value;
 
-    if (!mensagem) {
-      showError("A mensagem não pode estar vazia.");
+    if (!mensagem || mensagem.length < 3) {
+      showError("A mensagem deve ter no mínimo 3 caracteres.");
       return;
     }
 
